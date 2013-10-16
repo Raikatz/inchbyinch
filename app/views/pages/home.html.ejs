@@ -1,60 +1,16 @@
 <!DOCTYPE HTML>
 <html lang="en"><head>
     <meta charset="utf-8">
-    <title>Template · Bootstrap</title>
+    <title><%=title%></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
 
     <!-- Le styles -->
     <link href="libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <style type="text/css">
-        body {
-            padding-top: 20px;
-            padding-bottom: 40px;
-        }
+    <link href="stylesheets/home.css" rel="stylesheet">
+    <link href="libraries/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 
-            /* Custom container */
-        .container-narrow {
-            margin: 0 auto;
-            max-width: 700px;
-        }
-        .container-narrow > hr {
-            margin: 30px 0;
-        }
-
-            /* Main marketing message and sign up button */
-        .jumbotron {
-            margin: 60px 0;
-            text-align: center;
-        }
-        .jumbotron h1 {
-            font-size: 72px;
-            line-height: 1;
-        }
-        .jumbotron .btn {
-            font-size: 21px;
-            padding: 14px 24px;
-        }
-
-            /* Supporting marketing content */
-        .marketing {
-            margin: 60px 0;
-        }
-        .marketing p + h4 {
-            margin-top: 28px;
-        }
-    </style>
-    <link href="../public/libraries/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
-
-
-
-    <!-- Fav and touch icons -->
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
-    <link rel="shortcut icon" href="../assets/ico/favicon.png">
 </head>
 
 <body>
@@ -64,7 +20,7 @@
     <div class="masthead">
         <ul class="nav nav-pills pull-right">
             <li class="active"><a href="#">Home</a></li>
-            <li><a href="#">About</a></li>
+            <li><a href="login">About</a></li>
             <li><a href="#">Contact</a></li>
         </ul>
         <h3 class="muted">Project name</h3>
@@ -73,9 +29,6 @@
     <hr>
 
     <div class="jumbotron">
-        <h1>Super awesome marketing speak!</h1>
-        <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
-        <a class="btn btn-large btn-success" href="#">Sign up today</a>
     </div>
 
     <hr>
@@ -117,7 +70,81 @@
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="/libraries/jquery-2.0.3.min.js"></script>
 <script src="/libraries/bootstrap/js/bootstrap.min.js"></script>
+<script src="/libraries/d3.v3.min.js"></script>
+<script type="text/javascript">
 
+    var width = 960,
+            height = 136,
+            cellSize = 17; // cell size
+
+    var day = d3.time.format("%w"),
+            week = d3.time.format("%U"),
+            percent = d3.format(".1%"),
+            format = d3.time.format("%Y-%m-%d");
+
+    var color = d3.scale.quantize()
+            .domain([-.05, .05])
+            .range(d3.range(11).map(function(d) { return "q" + d + "-11"; }));
+
+    var svg = d3.select(".jumbotron").selectAll("svg")
+            .data(d3.range(1990, 2011))
+            .enter().append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("class", "RdYlGn")
+            .append("g")
+            .attr("transform", "translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")");
+
+    svg.append("text")
+            .attr("transform", "translate(-6," + cellSize * 3.5 + ")rotate(-90)")
+            .style("text-anchor", "middle")
+            .text(function(d) { return d; });
+
+    var rect = svg.selectAll(".day")
+            .data(function(d) { return d3.time.days(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
+            .enter().append("rect")
+            .attr("class", "day")
+            .attr("width", cellSize)
+            .attr("height", cellSize)
+            .attr("x", function(d) { return week(d) * cellSize; })
+            .attr("y", function(d) { return day(d) * cellSize; })
+            .datum(format);
+
+    rect.append("title")
+            .text(function(d) { return d; });
+
+    svg.selectAll(".month")
+            .data(function(d) { return d3.time.months(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
+            .enter().append("path")
+            .attr("class", "month")
+            .attr("d", monthPath);
+
+    d3.csv("dji.csv", function(error, csv) {
+        var data = d3.nest()
+                .key(function(d) { return d.Date; })
+                .rollup(function(d) { return (d[0].Close - d[0].Open) / d[0].Open; })
+                .map(csv);
+
+        rect.filter(function(d) { return d in data; })
+                .attr("class", function(d) { return "day " + color(data[d]); })
+                .select("title")
+                .text(function(d) { return d + ": " + percent(data[d]); });
+    });
+
+    function monthPath(t0) {
+        var t1 = new Date(t0.getFullYear(), t0.getMonth() + 1, 0),
+                d0 = +day(t0), w0 = +week(t0),
+                d1 = +day(t1), w1 = +week(t1);
+        return "M" + (w0 + 1) * cellSize + "," + d0 * cellSize
+                + "H" + w0 * cellSize + "V" + 7 * cellSize
+                + "H" + w1 * cellSize + "V" + (d1 + 1) * cellSize
+                + "H" + (w1 + 1) * cellSize + "V" + 0
+                + "H" + (w0 + 1) * cellSize + "Z";
+    }
+
+    d3.select(".jumbotron").style("height", "2910px");
+
+</script>
 
 
 </body><style type="text/css">embed[type*="application/x-shockwave-flash"],embed[src*=".swf"],object[type*="application/x-shockwave-flash"],object[codetype*="application/x-shockwave-flash"],object[src*=".swf"],object[codebase*="swflash.cab"],object[classid*="D27CDB6E-AE6D-11cf-96B8-444553540000"],object[classid*="d27cdb6e-ae6d-11cf-96b8-444553540000"],object[classid*="D27CDB6E-AE6D-11cf-96B8-444553540000"]{	display: none !important;}</style></html>

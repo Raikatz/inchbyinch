@@ -8,4 +8,6 @@ SEELITE.login = function(){
     function loginDto(){}
 
     loginDto.prototype.$loginButton = null;
+
+
 }
