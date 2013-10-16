@@ -9,4 +9,5 @@ module.exports = function routes() {
   this.root('pages#main');
 
   this.match('home', 'pages#home');
+  this.match('login', 'permission#login');
 }
