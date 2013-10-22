@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html lang="en"><head>
     <meta charset="utf-8">
-    <title><%=title%></title>
+    <title><%=Model.Title%></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -75,7 +75,7 @@
 
     var width = 960,
             height = 136,
-            cellSize = 17; // cell size
+            cellSize = 25; // cell size
 
     var day = d3.time.format("%w"),
             week = d3.time.format("%U"),
@@ -87,7 +87,7 @@
             .range(d3.range(11).map(function(d) { return "q" + d + "-11"; }));
 
     var svg = d3.select(".jumbotron").selectAll("svg")
-            .data(d3.range(1990, 2011))
+            .data(d3.range(2010, 2011))
             .enter().append("svg")
             .attr("width", width)
             .attr("height", height)
